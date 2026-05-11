@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(.next/**)",
+      "Write(.next/**)",
+      "Write(*.tsbuildinfo)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \".claude/scripts/session-start.sh\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$PWD\" && file=\"$CLAUDE_TOOL_RESULT_FILE_PATH\"; if [[ \"$file\" == *.ts || \"$file\" == *.tsx ]]; then npx eslint --fix \"$file\" 2>/dev/null || true; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

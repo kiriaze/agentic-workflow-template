@@ -1,0 +1,37 @@
+# Codex agent configuration for PROJECT_NAME
+# https://github.com/openai/codex
+
+# Codex runs as Implementer — gpt-5.4 is the right model for this role.
+# Role-based model assignments (Orchestrator=gpt-5.5, Researcher=gpt-5.4-mini)
+# are documented in docs/multi-agent.md and AGENTS.md.
+model = "gpt-5.4"
+
+[approval]
+# Require approval before running shell commands
+# "suggest" = suggest but don't auto-run, "auto-edit" = apply edits without approval
+mode = "suggest"
+
+[context]
+# Files Codex should always load into context at session start
+always_include = [
+  "AGENTS.md",
+  "HANDOFF.md",
+  "docs/AGENT_TASKS.md",
+]
+
+[context.ignore]
+# Never index or read these paths
+paths = [
+  "node_modules",
+  ".next",
+  "dist",
+  "coverage",
+  ".git",
+  "*.lock",
+  "*.tsbuildinfo",
+]
+
+[session]
+# Keep sessions under the 272K token ceiling to avoid cost doubling.
+# See docs/multi-agent.md for task scoping guidance.
+warn_at_tokens = 220000
