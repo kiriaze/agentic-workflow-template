@@ -318,9 +318,9 @@ architecture.md
 conventions.md
 environment.md
 multi-agent.md
-planning-template.md
 workflow.md
 AGENT_TASKS.md
+agent-roster.json
 )
 
 for f in "${DOC_FILES[@]}"; do
@@ -331,6 +331,56 @@ else
 warn "Template docs/$f not found, skipping"
 fi
 done
+
+# ── docs/plans/ ───────────────────────────────────────────────────────────────
+
+mkdir -p docs/plans
+
+for f in planning-template.md example-plan.md; do
+if [[ -f "$TEMPLATE_DIR/docs/plans/$f" ]]; then
+copy_with_backup "$TEMPLATE_DIR/docs/plans/$f" "docs/plans/$f"
+success "Copied docs/plans/$f"
+else
+warn "Template docs/plans/$f not found, skipping"
+fi
+done
+
+# ── docs/tasks/ ───────────────────────────────────────────────────────────────
+
+mkdir -p docs/tasks
+if [[ ! -f docs/tasks/.gitkeep ]]; then
+touch docs/tasks/.gitkeep
+success "Created docs/tasks/.gitkeep"
+fi
+
+# ── .git-hooks/ ──────────────────────────────────────────────────────────────
+
+if [[ -d "$TEMPLATE_DIR/.git-hooks" ]]; then
+  mkdir -p .git-hooks
+  for hook_src in "$TEMPLATE_DIR/.git-hooks"/*; do
+    hook_name="$(basename -- "$hook_src")"
+    copy_with_backup "$hook_src" ".git-hooks/$hook_name"
+    chmod +x ".git-hooks/$hook_name"
+    success "Copied .git-hooks/$hook_name"
+  done
+  git config core.hooksPath .git-hooks
+  success "Set core.hooksPath to .git-hooks"
+else
+  warn "Template .git-hooks/ not found, skipping"
+fi
+
+# ── .github/ ──────────────────────────────────────────────────────────────────
+
+if [[ -d "$TEMPLATE_DIR/.github" ]]; then
+  mkdir -p .github
+  for gh_src in "$TEMPLATE_DIR/.github"/*; do
+    gh_name="$(basename -- "$gh_src")"
+    copy_with_backup "$gh_src" ".github/$gh_name"
+    success "Copied .github/$gh_name"
+  done
+else
+  warn "Template .github/ not found, skipping"
+fi
 
 # ── .codex/ config ────────────────────────────────────────────────────────────
 
@@ -352,35 +402,50 @@ else
 backup_existing "HANDOFF.md"
 
 cat > HANDOFF.md <<MD
-
 # HANDOFF.md
 
 ## Current task
 
 *Project just initialized. No active task.*
 
-## Next steps
+## Next steps (priority order)
 
-1. Run `impeccable teach` to generate `PRODUCT.md` and `DESIGN.md` design context
-2. Set up environment variables
-3. Add architecture details to `docs/architecture.md`
+1. Run \`impeccable teach\` to generate \`PRODUCT.md\` and \`DESIGN.md\` design context
+2. Fill in \`docs/architecture.md\` with the tech stack and project structure
+3. Fill in \`docs/environment.md\` with environment variables
+4. Fill in the Commands section of \`AGENTS.md\`
 
 ## Known issues
 
 None.
 
+## Environment state
+
+*[Fill in: deployed services, external accounts, credentials that agents need context on — e.g. "Cloudflare Worker deployed at https://...", "Supabase project: <name>"]*
+
 ## Recent decisions
 
-* Project scaffolded with setup.sh
+- Project scaffolded with setup.sh
 
 ## Session log
 
 ### $(date '+%Y-%m-%d') — Init
 
-* Initialized project with AI agent workflow scaffold
+- Initialized project with AI agent workflow scaffold
+
+*Keep the 3 most recent sessions; compress older entries into a single summary line.*
 MD
 
 success "Created HANDOFF.md"
+fi
+
+# ── PRODUCT.md ────────────────────────────────────────────────────────────────
+
+if [[ -f "$TEMPLATE_DIR/PRODUCT.md" ]]; then
+  copy_with_backup "$TEMPLATE_DIR/PRODUCT.md" "PRODUCT.md"
+  success "Copied PRODUCT.md stub (fill in or run 'impeccable teach' to generate)"
+else
+  warn "Template PRODUCT.md not found, skipping"
 fi
 
 # ── .gitignore ────────────────────────────────────────────────────────────────
@@ -418,15 +483,16 @@ echo "Template source:"
 echo "  $TEMPLATE_DIR"
 echo ""
 echo "Next steps:"
-echo "  1.  cd "$PROJECT_DIR""
+echo "  1.  cd \"$PROJECT_DIR\""
 echo "  2.  Initialize your framework if needed, e.g.:"
 echo "      npx create-next-app@latest ."
-echo "  3.  Open Claude Code and run:"
-echo "      /impeccable teach"
-echo "  4.  Fill in docs/architecture.md and docs/environment.md"
-echo "  5.  Commit:"
+echo "  3.  Fill in AGENTS.md (Commands section) and docs/architecture.md"
+echo "  4.  Fill in docs/environment.md with your env vars"
+echo "  5.  Open Claude Code and run /impeccable teach (generates PRODUCT.md + DESIGN.md)"
+echo "  6.  Commit:"
 echo "      git add -A && git commit -m 'chore: initial scaffold'"
 echo ""
-warn "Overwritten files were backed up to .scaffold-backups/${BACKUP_STAMP}/"
+warn "Overwritten files were backed up as *.bak.${BACKUP_STAMP} before overwrite."
+warn "Git hooks installed in .git-hooks/ and wired via core.hooksPath."
 warn "Remember: run 'impeccable teach' before any UI work."
 warn "Global Claude settings, if any, still live in ~/.claude/settings.json"

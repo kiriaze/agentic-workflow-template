@@ -2,26 +2,30 @@
 
 ## Roles and model assignments
 
-| Role | Claude Code model | Codex model | Responsibilities |
-|---|---|---|---|
-| **Orchestrator** | `claude-opus-4-7` | `gpt-5.5` | Plans, decomposes tasks, writes implementer specs, delegates work, reviews final diffs. Does not write production code directly. |
-| **Implementer** | `claude-sonnet-4-6` | `gpt-5.4` | Writes code per spec. Receives a focused prompt: exact files to touch, what to change, what to preserve, which skill rules apply. |
-| **Reviewer** | `claude-sonnet-4-6` | `gpt-5.4` | Checks diff against spec. Runs type-check + lint + tests. Invokes `simplify` and `security-review` where applicable. |
-| **Researcher** | `claude-haiku-4-5-20251001` | `gpt-5.4-mini` | Read-only — codebase exploration, file lookups, web research. Returns findings to orchestrator. Never modifies files. |
+> Model assignments, effort overrides, and task-type routing are defined in **`docs/agent-roster.json`** — the single source of truth. Never hardcode model names elsewhere.
 
-### Model alias vs. pinned — what you need to know
+| Role | Responsibilities |
+|---|---|
+| **Orchestrator** | Plans, decomposes tasks, writes implementer specs, delegates work, reviews final diffs. Does not write production code directly. |
+| **Implementer** | Writes code per spec. Receives a focused prompt: exact files to touch, what to change, what to preserve, which skill rules apply. |
+| **Reviewer** | Checks diff against spec. Runs type-check + lint + tests. Invokes `simplify` and `security-review` where applicable. |
+| **Researcher** | Read-only — codebase exploration, file lookups, web research. Returns findings to orchestrator. Never modifies files. |
 
-**Claude Code:**
-- `claude-opus-4-7` — pinned to Opus 4.7. Prefer this over the bare `claude-opus-4` alias so orchestration behavior doesn't drift when Anthropic releases Opus 4.8+. Update deliberately.
-- `claude-sonnet-4-6` — pinned. Stable for implementation and review.
-- `claude-haiku-4-5-20251001` — pinned. Prefer this over `claude-haiku-4`; the alias resolves to the latest stable Haiku 4.x which may change.
+### Model selection at runtime
 
-**Codex (OpenAI):**
-- `gpt-5.5` — most capable; use for orchestration and architectural reasoning.
-- `gpt-5.4` — strong code generation; use for implementation and review.
-- `gpt-5.4-mini` — fast and lightweight; use for read-only research and exploration.
+At session start, read `docs/agent-roster.json`.
 
-When a new model version ships, update the pinned IDs here and in `.codex/config.toml` together so the two files stay in sync.
+When spawning any subagent, resolve the model in this order:
+1. Does the task have an explicit `task_type`? → use `routing.task_type_overrides[task_type]`
+2. Does the task spec declare an effort level? → apply `routing.effort_overrides[role][effort]`
+3. Fall back to `roles[role]` default.
+
+If provider is CC: use the `cc` field. If Codex: use the `codex` field.
+
+**Task type labels** (set in `AGENT_TASKS.md` per task row):
+`architecture` | `security_review` | `ui_visual` | `docs_config` | `implementation` (default) | `research`
+
+When a new model version ships, update **`docs/agent-roster.json`** only — all other files reference it.
 
 ---
 
@@ -45,7 +49,7 @@ When a new model version ships, update the pinned IDs here and in `.codex/config
 - Which skill rules apply (TDD? security-review? supabase?)
 - Acceptance criteria — how to know the task is done correctly
 
-Use `docs/planning-template.md` as the canonical format for writing plans before handing off to implementers. Once a plan is approved, write the task into `docs/AGENT_TASKS.md` — that is the live spec Codex and subagent Implementers execute against.
+Use `docs/plans/planning-template.md` as the canonical format for writing plans before handing off to implementers. Once a plan is approved, add one row to `docs/AGENT_TASKS.md` and create `docs/tasks/TASK-NNN.md` — that is the live spec Codex and subagent Implementers execute against.
 
 **Implementer → completion handoff must include:**
 - Summary of changes made

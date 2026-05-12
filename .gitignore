@@ -1,0 +1,13 @@
+# Claude Code session markers (hourly, auto-created by session-start hook)
+.claude/.session-*
+
+# macOS
+.DS_Store
+
+# Backup files created by setup.sh when overwriting existing files
+*.bak.*
+
+# Misc
+node_modules/
+.env
+.env.local

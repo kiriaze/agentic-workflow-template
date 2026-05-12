@@ -8,10 +8,16 @@ A universal scaffold for AI-agent-driven development. Sets up the full multi-age
 |---|---|
 | `AGENTS.md` | Behavioral contract for all agents: rules, skill triggers, workflow, multi-agent roles |
 | `CLAUDE.md` | Claude Code entry point — loads `AGENTS.md` via `@` reference |
-| `.claude/` | Session-start hook (auto-injects `HANDOFF.md` + active tasks on every prompt), permissions, settings |
+| `PRODUCT.md` | Design context stub: product purpose, visual direction, tone, accessibility baseline |
+| `HANDOFF.md` | Session continuity: current task, next steps, known issues, environment state, session log |
+| `.claude/` | Session-start hook (auto-injects `HANDOFF.md` + active tasks on first prompt), branch-protection hook, permissions |
+| `.git-hooks/` | Conventional commit enforcement + blocks `src/` commits directly on `main` |
+| `.github/` | PR template: Summary, Evidence table, quality gate checklist |
 | `.codex/` | Codex config: model assignment, approval mode, context includes, token budget |
-| `HANDOFF.md` | Session continuity: current task, next steps, known issues, session log |
-| `docs/` | Architecture, conventions, environment, multi-agent rules, planning template, workflow, task specs |
+| `docs/` | Architecture, conventions, environment, multi-agent rules, planning templates, workflow guide, task specs |
+| `docs/agent-roster.json` | Single source of truth for model assignments by role, effort level, and task type |
+| `docs/plans/` | `planning-template.md` + filled-in `example-plan.md` for Orchestrator → Implementer handoffs |
+| `docs/tasks/` | One spec file per active task (`TASK-NNN.md`); deleted on merge — PR history is the record |
 | `.gitignore` | Sane defaults — created only if missing, never overwritten |
 
 ## Usage
@@ -28,48 +34,58 @@ A universal scaffold for AI-agent-driven development. Sets up the full multi-age
 ./setup.sh .
 ```
 
-If existing scaffold-managed files are detected, you'll get a 5-second warning before anything is touched. All overwritten files are backed up to `.scaffold-backups/TIMESTAMP/` — nothing is silently lost.
+Existing scaffold-managed files are backed up as `*.bak.TIMESTAMP` before being overwritten — nothing is silently lost.
 
 ## After setup
 
 1. `cd <project-dir>` and open Claude Code
-2. The session-start hook automatically injects context on your first prompt
-3. Describe what you're building — the AI fills in the `[fill in]` placeholders in `AGENTS.md` and `docs/` once your stack is known
-4. For UI/design work: run `/impeccable teach` to generate `PRODUCT.md` and `DESIGN.md`
-5. Commit the scaffold: `git add -A && git commit -m 'chore: initial scaffold'`
+2. The session-start hook automatically injects `HANDOFF.md` + active tasks on your first prompt
+3. Run `git config core.hooksPath .git-hooks` if you didn't use `setup.sh` (the script does this automatically)
+4. Fill in the `[fill in]` placeholders in `AGENTS.md` (commands, stack-specific skill triggers, deployment)
+5. Fill in `docs/architecture.md` and `docs/environment.md`
+6. For UI/design work: run `/impeccable teach` to generate full `PRODUCT.md` and `DESIGN.md`
+7. Commit: `git add -A && git commit -m 'chore: initial scaffold'`
 
 ## Stack-agnostic by design
 
-`AGENTS.md` ships with typed placeholders for commands, conventions, skill triggers, and deployment target. No stack decisions are forced at scaffold time — the AI populates these once you know what you're building.
+`AGENTS.md` ships with typed placeholders for commands, conventions, skill triggers, and deployment target. No stack decisions are forced at scaffold time — populate them once you know what you're building.
 
 ## What's not included
 
-- **Skills** — live globally in `~/.claude/skills/` (symlinked from `~/.agents/skills/`). Shared across all projects; not copied per-project.
-- **Global Claude settings** — `~/.claude/settings.json` governs effort level, token limits, and global permissions. Never touched by this script.
+- **Skills** — live globally in `~/.claude/skills/`. Shared across all projects; not copied per-project.
+- **Global Claude settings** — `~/.claude/settings.json` governs global permissions. Never touched by this script.
+- **`settings.local.json`** — project-specific command allowlists accumulate here as you work; not scaffolded.
 
 ## Repo structure
 
 ```
-setup.sh                ← Scaffold script
-AGENTS.md               ← Master agent rulebook (the system)
-CLAUDE.md               ← CC entry point (@AGENTS.md)
-HANDOFF.md              ← Session continuity template
-docs/
-  workflow.md           ← How human, CC, and Codex work together
-  architecture.md       ← Stack, routes, hooks, auth (fill in per project)
-  conventions.md        ← Coding and UI conventions (fill in per project)
-  environment.md        ← Environment variables (fill in per project)
-  multi-agent.md        ← Worktrees, handoff protocol, git workflow
-  planning-template.md  ← Orchestrator → Implementer handoff format
-  AGENT_TASKS.md        ← Live task specs for Codex/Implementers
+setup.sh                          ← Scaffold script
+AGENTS.md                         ← Master agent rulebook (behavioral contract)
+CLAUDE.md                         ← CC entry point (@AGENTS.md)
+PRODUCT.md                        ← Design context stub (fill in or run impeccable teach)
+HANDOFF.md                        ← Session continuity template
 .claude/
-  settings.json         ← Permissions + hooks
+  settings.json                   ← Permissions + hooks (PreToolUse, UserPromptSubmit, PostToolUse)
   scripts/
-    session-start.sh    ← Injects HANDOFF.md + active tasks on prompt
+    session-start.sh              ← Injects HANDOFF.md + active tasks on first prompt per hour
+    check-branch.sh               ← Blocks src/ writes on main before git hooks fire
+.git-hooks/
+  pre-commit                      ← Blocks src/ commits on main/master
+  commit-msg                      ← Enforces conventional commit format
+.github/
+  PULL_REQUEST_TEMPLATE.md        ← Evidence table + quality gate checklist
 .codex/
-  config.toml           ← Codex model, approval, context, token limit
+  config.toml                     ← Codex model, approval mode, context includes, token limit
+docs/
+  workflow.md                     ← How human, CC, and Codex work together end-to-end
+  architecture.md                 ← Stack, routes, hooks (fill in per project)
+  conventions.md                  ← Coding and UI conventions (fill in per project)
+  environment.md                  ← Environment variables (fill in per project)
+  multi-agent.md                  ← Worktrees, model selection, handoff protocol, git workflow
+  agent-roster.json               ← Model assignments by role, effort, and task type
+  AGENT_TASKS.md                  ← Live task registry with active/completed rows
+  plans/
+    planning-template.md          ← Orchestrator → Implementer handoff format
+    example-plan.md               ← Filled-in example plan
+  tasks/                          ← Individual task spec files (TASK-NNN.md); empty at scaffold time
 ```
-
-## Future
-
-**`--update` mode** — sync an existing project's system rules to the latest template version without overwriting project-specific files (`HANDOFF.md`, `docs/architecture.md`, `docs/environment.md`, `docs/AGENT_TASKS.md`). The backup mechanism from option A applies here too — back up everything, replace system rules, let the user cherry-pick from backups. Not yet implemented.

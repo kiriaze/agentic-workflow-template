@@ -1,0 +1,28 @@
+#!/bin/sh
+# .git-hooks/pre-commit
+#
+# Blocks commits of src/ changes directly to main/master.
+# Docs-only and config changes (HANDOFF.md, AGENTS.md, docs/, etc.) may go to main.
+#
+# Setup (one-time, after clone): git config core.hooksPath .git-hooks
+
+BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+  STAGED_SRC=$(git diff --cached --name-only | grep '^src/' || true)
+
+  if [ -n "$STAGED_SRC" ]; then
+    echo ""
+    echo "BLOCKED: src/ changes cannot be committed directly to '$BRANCH'."
+    echo ""
+    echo "Files staged from src/:"
+    echo "$STAGED_SRC" | sed 's/^/  - /'
+    echo ""
+    echo "Create a feature branch first:"
+    echo "  git checkout -b feat/<task-name>"
+    echo ""
+    exit 1
+  fi
+fi
+
+exit 0

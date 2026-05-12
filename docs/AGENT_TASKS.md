@@ -1,113 +1,104 @@
 # AGENT_TASKS.md
 
-Live implementation spec. The Orchestrator writes tasks here; Implementers (Codex, Claude Sonnet subagents) execute against them.
+Live task registry. Orchestrator adds rows here when a task is scoped and ready; Implementers read the spec file linked in the Spec column.
 
-**Not** the same as `HANDOFF.md` — that tracks session continuity for Claude Code (where did I leave off).  
-This file tracks **active implementation work** that has been scoped, planned, and is ready to hand to an implementer agent.
+**Not** the same as `HANDOFF.md` — that tracks session continuity for Claude Code.
+This file tracks **active implementation work** ready to hand to an implementer agent.
 
 ---
 
 ## How to use this file
 
-**Orchestrator:** When a plan is approved, add a task block below using the template. Include exact files, acceptance criteria, and skill rules. Delete the block when the task is merged.
+**Orchestrator:** When a plan is approved, add one row to Active Tasks and create a spec file in `docs/tasks/TASK-NNN.md` using the template at the bottom of this file.
 
-**Implementer:** Read your assigned task block. Follow the spec exactly. Report back with files touched and any open questions. Never modify other agents' task blocks.
+**Implementer:** Read the spec file linked in your row. Follow it exactly. Report back with files touched and any open questions.
 
-**Reviewer:** Read the original task block + the diff. Verify acceptance criteria are met. Flag any spec deviations.
+**Reviewer:** Read the original spec file + the diff. Verify acceptance criteria are met.
+
+**On task completion (merged):**
+
+1. Delete the row from Active Tasks.
+2. Add one row to Completed Tasks (include the PR number).
+3. Delete the spec file from `docs/tasks/`. The PR and commit history are the permanent record.
+
+**Changing only a Status field is not completion. The row must be gone from Active Tasks.**
 
 ---
 
 ## Active Tasks
 
-_No active tasks. See next steps in HANDOFF.md._
+| Task | Title | Status | Assigned to | Branch | Task type | Spec |
+|------|-------|--------|-------------|--------|-----------|------|
 
-<!-- retired active tasks below -->
+_No active tasks. See next steps in HANDOFF.md._
 
 ---
 
-## Task Template
+## Completed Tasks
 
-````markdown
-### TASK-[N]: [Short title]
+| Task | Title | PR | Merged |
+|------|-------|----|--------|
 
-**Status:** `ready` | `in-progress` | `review` | `done`  
-**Assigned to:** Codex | claude-sonnet-4-6 | unassigned  
+---
+
+## Task template
+
+Create `docs/tasks/TASK-NNN.md` with this structure, then add one row to Active Tasks above.
+
+```markdown
+# TASK-NNN: [Short title]
+
+**Status:** `ready` | `in-progress` | `review`
+**Assigned to:** `claude-sonnet-4-6` | `codex` | `unassigned`
 **Branch:** `feat/short-description`
+**Task type:** `architecture` | `security_review` | `ui_visual` | `docs_config` | `implementation` | `research`
 
-#### Spec
+## Spec
 
-[What to build and why — 2-4 sentences. Link to the relevant planning-template.md section if applicable.]
+[What to build and why — 2–4 sentences.]
 
-#### Files to touch
+## Files to touch
 
 - `src/path/to/file.ts` — [what changes]
-- `src/path/to/other.ts` — [what changes]
 
-#### Do NOT touch
+## Do NOT touch
 
-- `src/lib/providers/` — prompt caching must be preserved
-- [other protected files/dirs]
+- [protected files/dirs]
 
-#### Implementation guidelines
+## Implementation guidelines
 
-> Codex cannot invoke Claude Code skills. Inline equivalents are listed here.
-> Items marked **[CC review]** are run by Claude Code during diff review — Codex does not need to handle them.
+- [ ] Invoke relevant skills before starting (see AGENTS.md § Agent Skill Rules)
+- [ ] ...
 
-- [ ] **Simplify** — after implementation, remove unnecessary abstractions, dead code, and overly clever patterns. Prefer the simplest code that satisfies the spec.
-- [ ] **TDD** (if applicable) — write the failing test first, then implement until it passes.
-- [ ] **Supabase** (if applicable) — use RLS, parameterised queries, `ON CONFLICT DO NOTHING` for idempotent inserts. No raw SQL in app code.
-- [ ] **security-review** [CC review] — Claude Code runs this during diff review for any auth, API key, or route changes.
-- [ ] **impeccable:audit** [CC review] — Claude Code runs this for any significant UI changes.
+## Acceptance criteria
 
-#### Acceptance criteria
+- [ ] [Criterion]
+- [ ] Type-check passes
+- [ ] Lint passes
+- [ ] All tests pass
 
-- [ ] [Criterion 1]
-- [ ] [Criterion 2]
-- [ ] `npx tsc --noEmit` passes
-- [ ] `npm run lint` passes
+## Setup steps
 
-#### Notes / open questions
-
-[Any constraints, edge cases, or questions the implementer should be aware of.]
-
-#### Setup steps
-
-Run before touching any files.
-
-```bash
+\`\`\`bash
 git fetch origin
 git checkout main && git pull origin main
 git checkout -b [branch-name]
-```
-````
+\`\`\`
 
-> Untracked files are not branch-specific — stage and commit as you work, not only at the end.
+## Completion steps
 
-#### Completion steps
-
-Run after all acceptance criteria pass.
-
-```bash
+\`\`\`bash
 git add [only the files listed above]
-git commit -m "[type]: [description under 72 chars]"
+git commit -m "[type]: [description under 72 chars]"   # no AI attribution
 git push origin [branch-name]
-```
+\`\`\`
 
-Then output:
-
-```
+Then post:
+\`\`\`
 TASK COMPLETE
 Branch: [branch-name]
 Commits: [SHA] [subject]
 Files changed: [list]
-Manual steps remaining: [e.g. run migration in Supabase SQL editor]
 Open questions: [any spec deviations or edge cases]
-```
-
-```
-
----
-
-## Completed Tasks (last 5)
-
+\`\`\`
 ```

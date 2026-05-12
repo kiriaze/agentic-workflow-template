@@ -52,7 +52,13 @@ Apply to every task — these close the most common failure modes.
 - **ALWAYS comment inline suppressions** — e.g. `@ts-ignore`, `# noqa`, `# type: ignore`; include the reason.
 - **ONE logical unit per commit** — prefix: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`; subject ≤ 72 chars.
 - **ALWAYS use only the user's git identity** — omit `Co-Authored-By` and AI signatures.
+- **ALWAYS create a worktree before touching any `src/` file** — `git worktree add .claude/worktrees/[branch] -b [branch]`
+- **ALWAYS open a draft PR automatically when quality gates pass** — no prompting needed; human reviews and merges.
+- **ALWAYS remove the worktree and local branch after the PR is merged** — `git worktree remove .claude/worktrees/[branch] && git branch -d [branch]`
+- **ALWAYS update AGENT_TASKS.md on task state changes** — on completion: delete the spec file from `docs/tasks/`, remove the Active Tasks row, add one Completed Tasks row with the PR number.
+- **ALWAYS document new env vars in `docs/environment.md`** in the same commit that introduces them.
 - **Update HANDOFF.md proactively** — after a significant milestone, before heavy exploration, or at ~50-60% context before `/clear`. Don't wait to be asked.
+- **Compress session log** — when HANDOFF.md session log exceeds 3 entries, compress older entries into one summary line.
 
 ### Bug fixes
 
@@ -88,9 +94,10 @@ Default: **`high`**. Escalate to **`xhigh`** only for:
 ## Project Init
 
 1. `git fetch origin && git pull origin main`
-2. Read `HANDOFF.md` — current task, next steps, known issues.
-3. Invoke `using-superpowers` — establish skill awareness.
-4. For UI/design work: confirm `PRODUCT.md` exists before starting — run `impeccable teach` if missing.
+2. `git config core.hooksPath .git-hooks`
+3. Read `HANDOFF.md` — current task, next steps, known issues.
+4. Invoke `using-superpowers` — establish skill awareness.
+5. For UI/design work: confirm `PRODUCT.md` exists before starting — run `impeccable teach` if missing.
 
 ---
 
@@ -102,32 +109,38 @@ Apply automatically — these are prescriptive, not suggestions.
 
 On your FIRST response of any session:
 1. Invoke `using-superpowers` via the Skill tool.
-2. Acknowledge current task and next steps from HANDOFF.md (injected via hook).
+2. The `UserPromptSubmit` hook has already injected HANDOFF.md and AGENT_TASKS.md. Acknowledge the current task and next steps.
 3. Report `ready` or `in-progress` tasks from AGENT_TASKS.md.
 4. State your proposed next action and wait for confirmation.
 
 ### Planning & design
 
 - New feature or component → invoke `impeccable:shape` before writing code.
-- Task touching more than ~3 files → map all touch points and confirm the plan.
+- Task touching more than ~3 files → map all touch points and confirm the plan. Use `docs/plans/planning-template.md`.
 
 ### Implementation
 
-Invoke `test-driven-development` for: new API routes/hooks, bug fixes, complex logic, unfamiliar areas.
-
-For multi-step tasks: after each significant step, state what was done, what's verified, and what remains before continuing.
+| Invoke `test-driven-development` when | Skip when |
+|---|---|
+| New API route, hook, or complex logic | UI/visual changes only |
+| Fixing any bug (failing test first) | Simple refactor with no logic change |
+| Entering unfamiliar code before modifying it | Trivial single-file edits |
 
 Skill triggers:
 - `@anthropic-ai/sdk` imports → `claude-api` (PRESERVE prompt caching)
-- UI component work → `frontend-design-system`
+- Building or modifying UI component → `frontend-design-system`
 - _[Stack-specific — fill in after stack is chosen. Examples: Next.js route → `vercel-react-best-practices`; new component (2+ uses) → `vercel-composition-patterns`; Supabase work → `supabase`]_
+
+For multi-step tasks: after each significant step, state what was done, what's verified, and what remains before continuing.
 
 ### Post-implementation
 
-- Non-trivial code change → `simplify`
-- Significant UI component → `impeccable:audit`
-- User-facing feature → `impeccable:harden`
-- Auth, API keys, rate limiting, or API routes → `security-review`
+| Trigger | Invoke |
+|---|---|
+| After any non-trivial code change | `simplify` |
+| After a significant UI component | `impeccable:audit` |
+| Before shipping any user-facing feature | `impeccable:harden` |
+| Auth, API keys, rate limiting, or API routes | `security-review` |
 
 ### Deployment
 
@@ -137,12 +150,14 @@ _[Fill in after stack is chosen — e.g. "Hosted on Vercel — invoke `deploy-to
 
 ## Multi-Agent Rules
 
-| Role             | Claude Code                 | Codex          | Does                                         |
-| ---------------- | --------------------------- | -------------- | -------------------------------------------- |
-| **Orchestrator** | `claude-opus-4-7`           | `gpt-5.5`      | Plans, decomposes, delegates, reviews diffs. |
-| **Implementer**  | `claude-sonnet-4-6`         | `gpt-5.4`      | Executes a focused spec in a worktree.       |
-| **Reviewer**     | `claude-sonnet-4-6`         | `gpt-5.4`      | Checks diff vs spec, runs quality gates.     |
-| **Researcher**   | `claude-haiku-4-5-20251001` | `gpt-5.4-mini` | Read-only exploration.                       |
+> Model assignments live in `docs/agent-roster.json` — the single source of truth. Never hardcode model names.
+
+| Role             | Does                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| **Orchestrator** | Plans, decomposes, delegates, reviews diffs. Never writes production code. |
+| **Implementer**  | Executes a focused spec. Runs in a worktree.                 |
+| **Reviewer**     | Checks diff vs spec, runs quality gates.                     |
+| **Researcher**   | Read-only exploration. Never modifies files.                 |
 
 - **ALWAYS use `isolation: "worktree"`** for every agent that modifies files.
 - Approved plan with independent tasks → invoke `subagent-driven-development`.
@@ -150,16 +165,19 @@ _[Fill in after stack is chosen — e.g. "Hosted on Vercel — invoke `deploy-to
 - Agents PUSH to branch; human reviews, approves, and merges to main.
 - ALWAYS start each session: `git fetch origin && git pull origin main`.
 
+@docs/multi-agent.md
+
 ---
 
 ## Docs
 
-| File                        | Read when                                                                         |
-| --------------------------- | --------------------------------------------------------------------------------- |
-| `docs/workflow.md`          | **Start here** — onboarding, or unclear how CC/Codex/human fit together           |
-| `docs/architecture.md`      | Touching unfamiliar code, adding routes/hooks, or making structural decisions     |
-| `docs/conventions.md`       | Always inlined via `@` above                                                      |
-| `docs/environment.md`       | Setting up, debugging config, or adding/changing env vars                         |
-| `docs/multi-agent.md`       | Orchestrating parallel work, spinning up worktrees, or managing Codex token limits|
-| `docs/planning-template.md` | Writing a handoff spec for an Implementer or Codex task                           |
-| `docs/AGENT_TASKS.md`       | Checking live task status or picking up an in-progress spec                       |
+| File                               | Read when                                                                          |
+| ---------------------------------- | ---------------------------------------------------------------------------------- |
+| `docs/workflow.md`                 | **Start here** — onboarding, or unclear how CC/Codex/human fit together            |
+| `docs/architecture.md`             | Touching unfamiliar code, adding routes/hooks, or making structural decisions      |
+| `docs/conventions.md`              | Always inlined via `@` above                                                       |
+| `docs/environment.md`              | Setting up, debugging config, or adding/changing env vars                          |
+| `docs/multi-agent.md`              | Orchestrating parallel work, spinning up worktrees, or managing Codex token limits |
+| `docs/agent-roster.json`           | Resolving which model to use for a role, effort level, or task type                |
+| `docs/plans/planning-template.md`  | Writing a handoff spec for an Implementer or Codex task                            |
+| `docs/AGENT_TASKS.md`              | Checking live task status or picking up an in-progress spec                        |

@@ -1,0 +1,39 @@
+#!/bin/sh
+# .git-hooks/commit-msg
+#
+# Enforces conventional commit message format.
+# Allowed types: feat, fix, chore, refactor, docs, test, style, perf, ci, build, revert
+#
+# Setup (one-time, after clone): git config core.hooksPath .git-hooks
+
+COMMIT_MSG=$(cat "$1")
+
+# Pass merge commits through unchanged
+if echo "$COMMIT_MSG" | grep -qE "^Merge "; then
+  exit 0
+fi
+
+# Pass revert commits through unchanged
+if echo "$COMMIT_MSG" | grep -qE "^Revert "; then
+  exit 0
+fi
+
+# Conventional commit pattern: type(scope)!: description
+PATTERN="^(feat|fix|chore|refactor|docs|test|style|perf|ci|build|revert)(\([a-z0-9/_-]+\))?(!)?: .+"
+
+if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
+  echo ""
+  echo "BLOCKED: Commit message does not follow conventional commit format."
+  echo ""
+  echo "  Got:      $COMMIT_MSG"
+  echo "  Expected: <type>[(<scope>)]: <description>"
+  echo ""
+  echo "  Types: feat, fix, chore, refactor, docs, test, style, perf, ci, build, revert"
+  echo "  Example: feat(auth): add OAuth sign-in flow"
+  echo "  Example: fix(api): handle null response from upstream"
+  echo "  Example: docs: update environment variables"
+  echo ""
+  exit 1
+fi
+
+exit 0
