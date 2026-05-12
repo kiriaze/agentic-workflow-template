@@ -63,8 +63,8 @@ src/path/to/file-c.ts       — [what changes here]
 | Claude API | Preserve prompt caching; check adapters pattern | `claude-api` |
 | New page/route | Follow App Router data-fetching patterns | `vercel-react-best-practices` |
 | New component (2+ uses) | Avoid boolean prop proliferation, use composition | `vercel-composition-patterns` |
-| UI markup | Check `.impeccable.md` tokens before writing | `frontend-design-system` |
-| Design brief | Read `.impeccable.md`; describe intent in spec | `impeccable:shape` |
+| UI markup | Check `PRODUCT.md` + `DESIGN.md` tokens before writing | `frontend-design-system` |
+| Design brief | Read `PRODUCT.md`; describe intent in spec | `impeccable:shape` |
 | Security [CC review] | — | `security-review` |
 | UI audit [CC review] | — | `impeccable:audit` |
 | Harden [CC review] | — | `impeccable:harden` |

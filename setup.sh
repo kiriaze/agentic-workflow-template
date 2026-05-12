@@ -106,21 +106,42 @@ error()   { echo -e "${RED}✗${NC} $*"; }
 
 # ── Backup helpers ────────────────────────────────────────────────────────────
 BACKUP_STAMP="$(date +%Y%m%d%H%M%S)"
+BACKUP_DIR=".scaffold-backups/${BACKUP_STAMP}"
 
 backup_existing() {
   local path="$1"
 
   if [[ -e "$path" || -L "$path" ]]; then
-    local backup="${path}.bak.${BACKUP_STAMP}"
-    local n=1
+    local dest="${BACKUP_DIR}/${path}"
+    mkdir -p -- "$(dirname -- "$dest")"
+    cp -a "$path" "$dest"
+    warn "Backed up: $path → $dest"
+  fi
+}
 
-    while [[ -e "$backup" || -L "$backup" ]]; do
-      backup="${path}.bak.${BACKUP_STAMP}.${n}"
-      n=$((n + 1))
+detect_existing_scaffold_files() {
+  local existing=()
+  local check=(
+    AGENTS.md CLAUDE.md HANDOFF.md
+    .claude .codex
+    docs/architecture.md docs/conventions.md docs/environment.md
+    docs/multi-agent.md docs/planning-template.md docs/workflow.md docs/AGENT_TASKS.md
+  )
+
+  for p in "${check[@]}"; do
+    [[ -e "$p" ]] && existing+=("$p")
+  done
+
+  if [[ ${#existing[@]} -gt 0 ]]; then
+    warn "Existing scaffold-managed files detected:"
+    for p in "${existing[@]}"; do
+      echo "    $p"
     done
-
-    cp -a "$path" "$backup"
-    warn "Backed up existing $path → $backup"
+    echo ""
+    info "All will be backed up to ${BACKUP_DIR}/ before overwrite."
+    info "Press Ctrl-C to abort, or wait 5 seconds to continue..."
+    sleep 5
+    echo ""
   fi
 }
 
@@ -158,6 +179,8 @@ fi
 info "Scaffolding project: $PROJECT_DIR"
 mkdir -p -- "$PROJECT_DIR"
 cd "$PROJECT_DIR"
+
+detect_existing_scaffold_files
 
 # ── Git init ──────────────────────────────────────────────────────────────────
 if [[ ! -d .git ]]; then
@@ -338,7 +361,7 @@ cat > HANDOFF.md <<MD
 
 ## Next steps
 
-1. Run `impeccable teach` to generate `.impeccable.md` design context
+1. Run `impeccable teach` to generate `PRODUCT.md` and `DESIGN.md` design context
 2. Set up environment variables
 3. Add architecture details to `docs/architecture.md`
 
@@ -372,11 +395,16 @@ coverage/
 .env.local
 *.tsbuildinfo
 .DS_Store
+.scaffold-backups/
 GITIGNORE
 
 success "Created .gitignore"
 else
 warn ".gitignore already exists, leaving it unchanged"
+if ! grep -qF ".scaffold-backups/" .gitignore; then
+  echo ".scaffold-backups/" >> .gitignore
+  success "Added .scaffold-backups/ to existing .gitignore"
+fi
 fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────
@@ -399,6 +427,6 @@ echo "  4.  Fill in docs/architecture.md and docs/environment.md"
 echo "  5.  Commit:"
 echo "      git add -A && git commit -m 'chore: initial scaffold'"
 echo ""
-warn "Existing scaffold-managed files were backed up as *.bak.${BACKUP_STAMP} before overwrite."
+warn "Overwritten files were backed up to .scaffold-backups/${BACKUP_STAMP}/"
 warn "Remember: run 'impeccable teach' before any UI work."
 warn "Global Claude settings, if any, still live in ~/.claude/settings.json"
