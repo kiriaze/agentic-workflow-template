@@ -93,6 +93,7 @@ Default: **`high`**. Escalate to **`xhigh`** only for:
 
 ## Project Init
 
+0. **If `.scaffold-backups/` exists** (upgrade) — `setup.sh` created `docs/tasks/TASK-000-adapt-scaffold.md` automatically. The session-start hook injects it; execute it before anything else. Claude reads the backups, fills in all `[fill in]` placeholders, and reports what was migrated. Skip on fresh projects.
 1. `git fetch origin && git pull origin main`
 2. `git config core.hooksPath .git-hooks`
 3. Read `HANDOFF.md` — current task, next steps, known issues.

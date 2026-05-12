@@ -38,6 +38,10 @@ Existing scaffold-managed files are backed up as `*.bak.TIMESTAMP` before being 
 
 ## After setup
 
+**Upgrading an existing project?** `setup.sh` automatically creates `docs/tasks/TASK-000-adapt-scaffold.md` when it detects backed-up files. On your first Claude Code session the session-start hook injects it — Claude reads the backups, fills in all `[fill in]` placeholders, and reports what was migrated vs what still needs manual input. No copy/paste required.
+
+**Fresh project:**
+
 1. `cd <project-dir>` and open Claude Code
 2. The session-start hook automatically injects `HANDOFF.md` + active tasks on your first prompt
 3. Run `git config core.hooksPath .git-hooks` if you didn't use `setup.sh` (the script does this automatically)
@@ -45,6 +49,8 @@ Existing scaffold-managed files are backed up as `*.bak.TIMESTAMP` before being 
 5. Fill in `docs/architecture.md` and `docs/environment.md`
 6. For UI/design work: run `/impeccable teach` to generate full `PRODUCT.md` and `DESIGN.md`
 7. Commit: `git add -A && git commit -m 'chore: initial scaffold'`
+
+**Upgrading (step 0 ran):** steps 4–5 above are handled by Claude automatically. Review the migration report, fill any gaps, then run `/impeccable teach` if `PRODUCT.md` needs a full refresh.
 
 ## Stack-agnostic by design
 

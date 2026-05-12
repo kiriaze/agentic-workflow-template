@@ -472,6 +472,83 @@ if ! grep -qF ".scaffold-backups/" .gitignore; then
 fi
 fi
 
+# ── TASK-000: scaffold adapt (upgrade only) ───────────────────────────────────
+
+if [[ -d "$BACKUP_DIR" ]]; then
+  cat > docs/tasks/TASK-000-adapt-scaffold.md <<MD
+# TASK-000: Adapt scaffold content from backups
+
+**Status:** \`ready\`
+**Assigned to:** \`claude-sonnet-4-6\`
+**Branch:** main
+**Task type:** \`docs_config\`
+
+## Spec
+
+\`setup.sh\` was run over an existing project. Previous scaffold files were backed up to
+\`${BACKUP_DIR}/\`. Extract project-specific content from those backups and apply it to the
+current template files — filling in all \`[fill in]\` placeholders so the new scaffold
+reflects the actual project. Preserve template structure throughout.
+
+## Files to read (from backup)
+
+Backup location: \`${BACKUP_DIR}/\`
+
+For each file that exists in the backup, extract the content described:
+
+- \`AGENTS.md\` — commands block, language/convention rules, UI stack, skill triggers, deployment target
+- \`docs/architecture.md\` — tech stack, routes, hooks, auth, feature flags
+- \`docs/conventions.md\` — language rules, state management, UI rules
+- \`docs/environment.md\` — env var definitions and defaults
+- \`HANDOFF.md\` — current task, recent decisions, known issues
+- \`PRODUCT.md\` — product purpose, tone, visual direction, accessibility baseline
+
+## Files to write
+
+- \`AGENTS.md\` — fill in Commands, Conventions, Skill triggers, Deployment sections
+- \`docs/architecture.md\` — fill in stack, routes, hooks, auth
+- \`docs/conventions.md\` — fill in language, state, UI rules
+- \`docs/environment.md\` — fill in env vars
+- \`HANDOFF.md\` — merge relevant context (current task, decisions, known issues)
+- \`PRODUCT.md\` — fill in product context if backup had content beyond the stub
+
+## Do NOT touch
+
+- Template structure — only populate \`[fill in]\` placeholders; do not restructure
+- \`.claude/\`, \`.git-hooks/\`, \`.github/\`, \`.codex/\` — not part of this task
+
+## Acceptance criteria
+
+- [ ] All \`[fill in]\` placeholders are either populated or flagged as "not found in backup"
+- [ ] Template structure in each file is preserved
+- [ ] Migration report delivered: what was adapted vs what still needs manual input
+- [ ] This file (\`docs/tasks/TASK-000-adapt-scaffold.md\`) deleted on completion
+- [ ] The TASK-000 row removed from \`docs/AGENT_TASKS.md\` on completion
+MD
+
+  success "Created docs/tasks/TASK-000-adapt-scaffold.md"
+
+  # Add TASK-000 row to AGENT_TASKS.md active table
+  python3 -c "
+path = 'docs/AGENT_TASKS.md'
+old = '_No active tasks. See next steps in HANDOFF.md._'
+new = '| TASK-000 | Adapt scaffold content from backups | \`ready\` | \`claude-sonnet-4-6\` | main | \`docs_config\` | [spec](docs/tasks/TASK-000-adapt-scaffold.md) |'
+content = open(path).read().replace(old, new, 1)
+open(path, 'w').write(content)
+"
+  success "Added TASK-000 to docs/AGENT_TASKS.md"
+
+  # Set TASK-000 as the current task in HANDOFF.md
+  python3 -c "
+path = 'HANDOFF.md'
+old = '_No current task. Needs planning._'
+new = 'Adapt scaffold content from backups — see [TASK-000](docs/tasks/TASK-000-adapt-scaffold.md).'
+content = open(path).read().replace(old, new, 1)
+open(path, 'w').write(content)
+"
+  success "Set TASK-000 as current task in HANDOFF.md"
+fi
+
 # ── Summary ───────────────────────────────────────────────────────────────────
 
 echo ""
@@ -486,13 +563,22 @@ echo "Next steps:"
 echo "  1.  cd \"$PROJECT_DIR\""
 echo "  2.  Initialize your framework if needed, e.g.:"
 echo "      npx create-next-app@latest ."
-echo "  3.  Fill in AGENTS.md (Commands section) and docs/architecture.md"
-echo "  4.  Fill in docs/environment.md with your env vars"
-echo "  5.  Open Claude Code and run /impeccable teach (generates PRODUCT.md + DESIGN.md)"
-echo "  6.  Commit:"
-echo "      git add -A && git commit -m 'chore: initial scaffold'"
+if [[ -d "$BACKUP_DIR" ]]; then
+  echo "  3.  Open Claude Code — TASK-000 runs automatically on first session,"
+  echo "      adapting backup content into AGENTS.md, docs/, HANDOFF.md, and PRODUCT.md."
+  echo "      Review the migration report and fill in any remaining gaps."
+  echo "  4.  Run /impeccable teach if PRODUCT.md needs a full refresh."
+  echo "  5.  Commit:"
+  echo "      git add -A && git commit -m 'chore: upgrade scaffold'"
+else
+  echo "  3.  Fill in AGENTS.md (Commands section) and docs/architecture.md"
+  echo "  4.  Fill in docs/environment.md with your env vars"
+  echo "  5.  Open Claude Code and run /impeccable teach (generates PRODUCT.md + DESIGN.md)"
+  echo "  6.  Commit:"
+  echo "      git add -A && git commit -m 'chore: initial scaffold'"
+fi
 echo ""
-warn "Overwritten files were backed up as *.bak.${BACKUP_STAMP} before overwrite."
+warn "Overwritten files were backed up to .scaffold-backups/${BACKUP_STAMP}/ before overwrite."
 warn "Git hooks installed in .git-hooks/ and wired via core.hooksPath."
 warn "Remember: run 'impeccable teach' before any UI work."
 warn "Global Claude settings, if any, still live in ~/.claude/settings.json"
