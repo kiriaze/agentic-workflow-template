@@ -35,3 +35,6 @@ paths = [
 # Keep sessions under the 272K token ceiling to avoid cost doubling.
 # See docs/multi-agent.md for task scoping guidance.
 warn_at_tokens = 220000
+
+[agent]
+computer_use = false
