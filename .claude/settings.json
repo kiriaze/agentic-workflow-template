@@ -1,11 +1,7 @@
 {
   "showThinkingSummaries": true,
   "permissions": {
-    "deny": [
-      "Read(.next/**)",
-      "Write(.next/**)",
-      "Write(*.tsbuildinfo)"
-    ]
+    "deny": ["Read(.next/**)", "Write(.next/**)", "Write(*.tsbuildinfo)"]
   },
   "hooks": {
     "PreToolUse": [
@@ -35,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$PWD\" && file=\"$CLAUDE_TOOL_RESULT_FILE_PATH\"; if [[ \"$file\" == *.ts || \"$file\" == *.tsx ]]; then npx eslint --fix \"$file\" 2>/dev/null || true; fi"
+            "command": "cd \"$PWD\" && file=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); if [[ \"$file\" == *.ts || \"$file\" == *.tsx ]]; then npx eslint --fix \"$file\" 2>/dev/null || true; fi"
           }
         ]
       }
