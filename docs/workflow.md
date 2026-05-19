@@ -92,6 +92,15 @@ Quality gates (mandatory for all PRs):
 - `npm run lint` — clean
 - `npm test` — all pass
 
+**Automated enforcement:** Once your stack is chosen, create `.scripts/quality-gates.sh` with your project's lint/typecheck/test commands. The pre-commit hook runs it automatically on every commit — quality gates become enforced, not just instructed. Example:
+
+```sh
+#!/bin/sh
+npm run lint && npx tsc --noEmit && npm test
+```
+
+Make it executable: `chmod +x .scripts/quality-gates.sh`. AI will create this file during scaffold adaptation (TASK-000) or when you ask it to once your stack is known.
+
 Skill invocations (as applicable):
 - CC runs `simplify`, `security-review`, and `impeccable:audit` where appropriate.
 - Codex output: CC reviews the diff against the spec before a PR is opened.
@@ -194,6 +203,7 @@ sequenceDiagram
 | `AGENTS.md` | Human | After setup.sh; when workflow changes | Review `[fill in]` placeholders; AI can suggest updates |
 | `PRODUCT.md` / `DESIGN.md` | Skill | Once per project; re-run if brand changes | `impeccable teach` (or equivalent design brief tool) |
 | `docs/agent-roster.json` | Human | When new model versions ship | Edit directly |
+| `.scripts/quality-gates.sh` | Human or AI | Created once stack is chosen | Ask Claude: "create quality-gates.sh for [stack]" |
 | `docs/tasks/TASK-NNN.md` | CC (auto) | Created per approved plan; deleted on merge | N/A |
 | `docs/workflow.md` | Human | When workflow changes | Update manually; AI can propose edits |
 | `docs/multi-agent.md` | Human | When multi-agent rules change | Update manually |

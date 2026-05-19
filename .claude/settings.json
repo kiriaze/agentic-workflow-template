@@ -1,7 +1,12 @@
 {
   "showThinkingSummaries": true,
   "permissions": {
-    "deny": ["Read(.next/**)", "Write(.next/**)", "Write(*.tsbuildinfo)"]
+    "deny": [
+      "Read(.next/**)",
+      "Write(.next/**)",
+      "Write(*.tsbuildinfo)",
+      "Read(**/node_modules/**)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
