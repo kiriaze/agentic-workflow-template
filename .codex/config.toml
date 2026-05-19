@@ -1,9 +1,12 @@
 # Codex agent configuration for PROJECT_NAME
 # https://github.com/openai/codex
 
-# Codex runs as Implementer — gpt-5.4 is the right model for this role.
-# Role-based model assignments (Orchestrator=gpt-5.5, Researcher=gpt-5.4-mini)
-# are documented in docs/multi-agent.md and AGENTS.md.
+# This model is the default for Codex running as Implementer.
+# Full role-based model assignments for all roles and platforms live in
+# docs/agent-roster.json — the single source of truth. When the orchestrator
+# spawns Codex subagents it reads the roster; this value is the fallback when
+# Codex runs directly (e.g. user opens Codex and loads this project).
+# Either CC or Codex can fill any role — see docs/multi-agent.md.
 model = "gpt-5.4"
 
 [approval]
@@ -12,11 +15,11 @@ model = "gpt-5.4"
 mode = "suggest"
 
 [context]
-# Files Codex should always load into context at session start
+# AGENTS.md is always loaded — it's the master rulebook, not a session brief.
+# HANDOFF.md and docs/AGENT_TASKS.md are injected by .scripts/session-start.sh
+# (the session-start hook), which both CC and Codex share.
 always_include = [
   "AGENTS.md",
-  "HANDOFF.md",
-  "docs/AGENT_TASKS.md",
 ]
 
 [context.ignore]
@@ -37,4 +40,5 @@ paths = [
 warn_at_tokens = 220000
 
 [agent]
+# Personal preference, you're free to edit. I just don't like AI hijacking my computer/apps when it can use it's built-in browser (browser-use)
 computer_use = false

@@ -123,7 +123,7 @@ detect_existing_scaffold_files() {
   local existing=()
   local check=(
     AGENTS.md CLAUDE.md HANDOFF.md
-    .claude .codex
+    .scripts .claude .codex
     docs/architecture.md docs/conventions.md docs/environment.md
     docs/multi-agent.md docs/planning-template.md docs/workflow.md docs/AGENT_TASKS.md
   )
@@ -219,18 +219,6 @@ copy_claude_static_assets() {
       skills)
         # Skills are global; do not copy or symlink them into each project.
         continue
-        ;;
-
-      scripts)
-        mkdir -p .claude/scripts
-
-        for script_src in "$src"/*; do
-          local script_name
-          script_name="$(basename -- "$script_src")"
-          copy_with_backup "$script_src" ".claude/scripts/$script_name"
-          chmod +x ".claude/scripts/$script_name"
-          success "Copied .claude/scripts/$script_name"
-        done
         ;;
 
       *)
@@ -387,10 +375,33 @@ fi
 mkdir -p .codex
 
 if [[ -f "$TEMPLATE_DIR/.codex/config.toml" ]]; then
-copy_with_project_name_replacement "$TEMPLATE_DIR/.codex/config.toml" ".codex/config.toml"
-success "Copied .codex/config.toml"
+  copy_with_project_name_replacement "$TEMPLATE_DIR/.codex/config.toml" ".codex/config.toml"
+  success "Copied .codex/config.toml"
 else
-warn "Template .codex/config.toml not found, skipping"
+  warn "Template .codex/config.toml not found, skipping"
+fi
+
+if [[ -f "$TEMPLATE_DIR/.codex/hooks.json" ]]; then
+  copy_with_backup "$TEMPLATE_DIR/.codex/hooks.json" ".codex/hooks.json"
+  success "Copied .codex/hooks.json"
+else
+  warn "Template .codex/hooks.json not found, skipping"
+fi
+
+# ── .scripts/ shared hooks ────────────────────────────────────────────────────
+# Shared by both .claude/settings.json and .codex/hooks.json
+
+if [[ -d "$TEMPLATE_DIR/.scripts" ]]; then
+  mkdir -p .scripts
+  for script_src in "$TEMPLATE_DIR/.scripts"/*; do
+    [[ "$(basename -- "$script_src")" == .session-* ]] && continue
+    script_name="$(basename -- "$script_src")"
+    copy_with_backup "$script_src" ".scripts/$script_name"
+    [[ "$script_src" == *.sh ]] && chmod +x ".scripts/$script_name"
+    success "Copied .scripts/$script_name"
+  done
+else
+  warn "Template .scripts/ not found, skipping"
 fi
 
 # ── HANDOFF.md ────────────────────────────────────────────────────────────────

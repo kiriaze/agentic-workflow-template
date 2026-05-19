@@ -11,6 +11,8 @@
 | **Reviewer** | Checks diff against spec. Runs type-check + lint + tests. Invokes `simplify` and `security-review` where applicable. |
 | **Researcher** | Read-only — codebase exploration, file lookups, web research. Returns findings to orchestrator. Never modifies files. |
 
+**Either CC or Codex can fill any role.** `agent-roster.json` has `cc` and `codex` fields for all four roles. The recommended defaults are CC as Orchestrator/Reviewer (it has hooks, browser access, and interactive capability) and Codex as Implementer (it runs unattended in isolated worktrees). `.codex/config.toml` sets Codex's own session model — this is a platform default, not roster-managed; the roster governs what model the orchestrator *requests* when spawning subagents.
+
 ### Model selection at runtime
 
 At session start, read `docs/agent-roster.json`.

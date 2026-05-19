@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \".claude/scripts/check-branch.sh\""
+            "command": "bash \".scripts/check-branch.sh\""
           }
         ]
       }
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \".claude/scripts/session-start.sh\""
+            "command": "bash \".scripts/session-start.sh\""
           }
         ]
       }
@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$PWD\" && file=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); if [[ \"$file\" == *.ts || \"$file\" == *.tsx ]]; then npx eslint --fix \"$file\" 2>/dev/null || true; fi"
+            "command": "bash \".scripts/auto-lint.sh\""
           }
         ]
       }
