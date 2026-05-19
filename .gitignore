@@ -1,5 +1,6 @@
-# Claude Code session markers (hourly, auto-created by session-start hook)
+# Session markers (hourly, auto-created by session-start hook)
 .claude/.session-*
+.scripts/.session-*
 
 # macOS
 .DS_Store
