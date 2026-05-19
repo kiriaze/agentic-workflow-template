@@ -2,6 +2,9 @@
 .claude/.session-*
 .scripts/.session-*
 
+# Local permission allowlists — machine-specific, not portable
+.claude/settings.local.json
+
 # macOS
 .DS_Store
 **/.DS_Store

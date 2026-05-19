@@ -61,7 +61,7 @@ Existing scaffold-managed files are backed up as `*.bak.TIMESTAMP` before being 
 
 - **Skills** — live globally in `~/.claude/skills/`. Shared across all projects; not copied per-project.
 - **Global Claude settings** — `~/.claude/settings.json` governs global permissions. Never touched by this script.
-- **`settings.local.json`** — project-specific command allowlists accumulate here as you work; not scaffolded.
+- **`settings.local.json`** — machine-local permission allowlists accumulate here as you work; gitignored and not scaffolded. Generic approvals (git, gh) belong in your global `~/.claude/settings.json` instead.
 
 ## Optional skill integrations
 
@@ -75,7 +75,7 @@ This template references several Claude Code skills. None are required — the s
 | `finishing-a-development-branch` | Final verification + PR options after implementation | Run quality gates manually; open PR with `gh pr create` |
 | `simplify` | Post-implementation code quality pass | Ask inline: "review this diff for unnecessary complexity" |
 
-Skills live in `~/.claude/skills/` and are shared across all your projects. To add one, copy the skill file there.
+Skills live in `~/.claude/skills/` and are shared across all your projects. To add one, copy the skill file there. If you keep skills in a separate directory (e.g. `~/.agents/skills/`), symlink it: `ln -sf ~/.agents/skills ~/.claude/skills`.
 
 ## Repo structure
 
