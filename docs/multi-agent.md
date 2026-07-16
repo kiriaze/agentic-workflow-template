@@ -48,8 +48,9 @@ When a new model version ships, update **`docs/agent-roster.json`** only — all
 - Exact files to touch (absolute paths)
 - What to change and why
 - What **not** to change
-- Which skill rules apply (TDD? security-review? supabase?)
+- Which skill rules apply (TDD? security-review? supabase?) — with `docs/model-tiers.md` fallbacks for harnesses without the Skill tool
 - Acceptance criteria — how to know the task is done correctly
+- `task_type` label so the roster can select the right model
 
 Use `docs/plans/planning-template.md` as the canonical format for writing plans before handing off to implementers. Once a plan is approved, add one row to `docs/AGENT_TASKS.md` and create `docs/tasks/TASK-NNN.md` — that is the live spec Codex and subagent Implementers execute against.
 
@@ -93,18 +94,30 @@ chore/short-description  # non-code changes
 - Conventional commit, subject ≤ 72 characters
 - No AI attribution
 
-**4. Push branch and open a PR:**
+**4. Push branch and open a draft PR** with a body matching `.github/PULL_REQUEST_TEMPLATE.md`:
 ```bash
 git push origin <branch-name>
-gh pr create --title "<conventional title>" --body "<summary + test plan>"
+gh pr create --draft --title "<conventional title>" --body "$(cat <<'EOF'
+## Summary
+- <bullets>
+
+## Evidence
+<see .github/PULL_REQUEST_TEMPLATE.md>
+EOF
+)"
 ```
 
 **5. Agents do not merge into main. A human reviews, approves, and merges.**
 
-**6. Exception — trivial changes** (typo, config value, single-line non-logic edit, docs):
-Commit directly to main and push immediately. No branch or PR needed.
+**6. After human merges:** clean up the worktree and local branch, then pull fresh from main:
+```bash
+git worktree remove .claude/worktrees/[branch-name]
+git branch -d [branch-name]
+git fetch origin && git pull origin main
+```
 
-**7. After human merges:** next agent session starts by pulling fresh from main (step 1).
+**7. Exception — trivial changes** (typo, config value, single-line non-logic edit, docs):
+Commit directly to main and push immediately. No branch or PR needed. State "No plan needed: <reason>" (see `AGENTS.md` § Workflow).
 
 ---
 
@@ -117,16 +130,23 @@ When the Orchestrator spawns multiple Implementers in parallel:
 
 ---
 
-## Codex session limits and task scoping
+## Session limits and task scoping (all delegated implementers)
 
-**Token ceiling:** Codex sessions double in cost above 272K input tokens. Keep sessions under this boundary.
+**Complexity ceiling:** every task delegated to a mid- or small-tier model must meet the
+decomposition rules and per-task complexity ceiling in **`docs/model-tiers.md`** — exact file
+list, do-not-touch list, concrete acceptance criteria, no open-ended exploration, ≤5 files /
+≤~300 changed lines / one outcome. That file also defines the model floor per task type.
 
-**Practical ceiling:** Target ≤220K tokens per Codex session (`.codex/config.toml` warns at this threshold). This leaves headroom for the model's own output and any tool call payloads.
+**Codex token ceiling:** Codex sessions double in cost above 272K input tokens. Target ≤220K
+per session (`.codex/config.toml` warns at this threshold) — headroom for model output and
+tool payloads.
 
-**How to scope tasks for Codex:**
-- One task block in `docs/AGENT_TASKS.md` = one Codex session. If a task block would pull in more than 3-4 large files of context, split it.
-- Do **not** give Codex open-ended exploration prompts. The Orchestrator does exploration (Researcher role); Codex receives a precise spec with exact file paths.
-- Avoid loading the full `docs/` folder into context unless all of it is genuinely needed. Point Codex to the specific files in its task block.
-- If a task requires reading many files before writing, have the Researcher agent pre-summarize and include the summary in the task spec rather than making Codex re-read everything.
+**How to scope delegated tasks:**
+- One spec file in `docs/tasks/` = one implementer session. If a spec would pull in more than 3-4 large files of context, split it.
+- Do **not** give an implementer open-ended exploration prompts. The Orchestrator does exploration (Researcher role); the implementer receives a precise spec with exact file paths.
+- Avoid loading the full `docs/` folder into context unless genuinely needed. Point the implementer to its specific spec file.
+- If a task requires reading many files before writing, have the Researcher agent pre-summarize and include the summary in the spec rather than making the implementer re-read everything.
 
-**`AGENT_TASKS.md` is the Codex entry point.** Each task block is self-contained: files to touch, what to change, what not to touch, acceptance criteria. Codex should need nothing outside the task block + the files listed in it.
+**`docs/tasks/TASK-NNN.md` is the implementer entry point.** Each spec is self-contained:
+files to touch, what to change, what not to touch, acceptance criteria. The implementer should
+need nothing outside the spec file + the files listed in it.

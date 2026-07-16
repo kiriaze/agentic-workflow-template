@@ -4,10 +4,17 @@
 
 - **No `any`** — strict TypeScript throughout; prefer explicit interfaces or inferred types.
 - **Named exports only** — no default exports for components or hooks; makes refactoring and imports consistent.
+- **Named imports over namespace** — always use named imports; never the namespace form (`React.useState`). Exception: packages that only ship a default export.
 - **Extract repeated logic** — shared logic goes into a custom hook under `src/hooks/` or a utility in `src/lib/`; don't duplicate across components.
 - **No new state libraries** — state lives in custom hooks. Don't introduce Zustand, React Query, etc. without discussion.
 - **Component Slot Architecture** – Complex components must use a children prop or named slots (e.g., renderHeader, renderFooter). Avoid passing 20+ props to a single file.
 - **Semantic Markup as a Requirement** – No div buttons. All interactive elements must use semantic HTML (button, a, summary) and include appropriate aria- labels.
+
+## Control flow
+
+- **Guard clauses first** — return early on invalid or edge cases instead of nesting the happy path. Prefer flat over deep: two levels of nesting is a smell, three needs a reason.
+- **Extract only real complexity** — give branch logic its own named function when it is genuinely complex or reused. There is no mechanical "N lines → extract" trigger — single-use helpers that just relocate code violate "Simplicity first".
+- **Ternaries only when simple** — one condition, short arms. Never nested.
 
 ## File structure
 

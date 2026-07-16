@@ -48,4 +48,28 @@ else
 fi
 
 echo ""
+echo "## Roster freshness"
+ROSTER="$PROJECT_ROOT/docs/agent-roster.json"
+if [[ -f "$ROSTER" ]]; then
+  python3 -c "
+import json, datetime, sys
+try:
+    data = json.load(open('$ROSTER'))
+    lv = data.get('last_verified')
+    if not lv:
+        print('(agent-roster.json has no last_verified field — add one and verify model IDs)')
+        sys.exit()
+    age = (datetime.date.today() - datetime.date.fromisoformat(lv)).days
+    if age > 60:
+        print(f'WARNING: agent-roster.json last verified {age} days ago ({lv}). Ask the human to reconfirm model IDs, then update last_verified.')
+    else:
+        print(f'(roster verified {age} days ago — OK)')
+except Exception:
+    print('(could not read agent-roster.json freshness)')
+" 2>/dev/null || echo "(could not read agent-roster.json freshness)"
+else
+  echo "(docs/agent-roster.json not found)"
+fi
+
+echo ""
 echo "</session-start-brief>"

@@ -27,6 +27,20 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
   fi
 fi
 
+# ── AGENTS.md compression lint ────────────────────────────────────────────────
+# AGENTS.md is a behavioral contract with a hard 200-line ceiling (see its header).
+# Oversized instruction files degrade weaker models' adherence.
+if git diff --cached --name-only | grep -qx 'AGENTS.md'; then
+  AGENTS_LINES=$(wc -l < AGENTS.md | tr -d ' ')
+  if [ "$AGENTS_LINES" -gt 200 ]; then
+    echo ""
+    echo "BLOCKED: AGENTS.md is $AGENTS_LINES lines (hard ceiling: 200)."
+    echo "Compress or move content to docs/ before committing."
+    echo ""
+    exit 1
+  fi
+fi
+
 # ── Quality gates ─────────────────────────────────────────────────────────────
 # Run project quality gates if defined. Create .scripts/quality-gates.sh with
 # your lint/typecheck/test commands once your stack is chosen — it will be
