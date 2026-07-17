@@ -67,6 +67,7 @@ the Codex scoping rules in `docs/multi-agent.md` to every delegated implementer.
 - **No open-ended exploration** — research happens upstream (Researcher role); its summary is embedded in the spec.
 - **Complexity ceiling** — ≤5 files touched, ≤~300 changed lines, ≤3–4 large files of read context, exactly one outcome. One spec file = one session.
 - **No new abstractions** — a task that needs a new pattern or abstraction is `architecture` (Frontier floor).
+- **Stuck-loop escalation** — three failed attempts at the same acceptance criterion: stop, summarize what was tried, escalate to the orchestrator or human. Never keep grinding.
 
 If a task exceeds any line above: split it or raise the tier. Never assume the model copes.
 The Codex 272K/220K token ceiling in `docs/multi-agent.md` is the cost budget; this ceiling is

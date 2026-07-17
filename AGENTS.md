@@ -50,6 +50,7 @@ Apply to every task — these close the most common failure modes.
 - **Plans live in this repo** — plans go in `docs/plans/`, task specs in `docs/tasks/`. Plan filename: `<verb>-<subject>.md` tied to the task. Never a global path, never a generated slug.
 - **Register at plan approval** — the moment a plan is approved, add the `AGENT_TASKS.md` row and spec file with an assignee. Never self-assign and implement in one step: state the assignment, get the normal go-ahead, then start.
 - **ALWAYS run quality gates before committing:** type-check, lint, test (use your project's commands).
+- **Verify the baseline before building** — before implementing against an existing branch or task, run quality gates first. A red baseline is a finding to report, not a state to silently inherit.
 - **ALWAYS comment inline suppressions** — e.g. `@ts-ignore`, `# noqa`, `# type: ignore`; include the reason.
 - **ONE logical unit per commit** — prefix: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`; subject ≤ 72 chars.
 - **ALWAYS use only the user's git identity** — omit `Co-Authored-By` and AI signatures.

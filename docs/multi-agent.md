@@ -59,6 +59,8 @@ Use `docs/plans/planning-template.md` as the canonical format for writing plans 
 - Files touched
 - Any open questions or edge cases discovered
 
+Keep the completion handoff condensed (~1-2K tokens): reference files and commits — never paste file contents the reviewer can read from the diff.
+
 The **Reviewer** receives: original spec + diff — not the full conversation history.
 
 ---
