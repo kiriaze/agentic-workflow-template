@@ -27,21 +27,18 @@
     }
   },
   "routing": {
+    "effort_note": "Only xhigh needs overrides — high is the role default. xhigh escalates one tier for the rare cases AGENTS.md defines (cross-cutting bugs, security-critical work).",
     "effort_overrides": {
       "implementer": {
-        "high": {
-          "codex": "gpt-5.4-mini"
-        },
         "xhigh": {
-          "codex": "gpt-5.4-mini"
+          "cc": "claude-opus-4-8",
+          "codex": "gpt-5.4"
         }
       },
       "researcher": {
-        "high": {
-          "codex": "gpt-5.4-mini"
-        },
         "xhigh": {
-          "codex": "gpt-5.4-mini"
+          "cc": "claude-sonnet-4-6",
+          "codex": "gpt-5.4"
         }
       }
     },
