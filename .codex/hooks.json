@@ -19,6 +19,15 @@
             "command": "bash .scripts/check-branch.sh"
           }
         ]
+      },
+      {
+        "matcher": "shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .scripts/guard-destructive.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [

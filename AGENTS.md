@@ -5,7 +5,7 @@ Claude Code reads this via `CLAUDE.md`. OpenAI Codex and other agents read it di
 
 > **Non-Claude Code agents:** where this file references `@docs/filename.md`, read that file directly for the full content.
 
-> **Maintaining this file:** Behavioral contract, not a knowledge dump. Hard ceiling: 200 lines. No examples — models over-fit to them. No rationale or narrative — those belong in `docs/`. Stack-specific rules go in `docs/conventions.md`. Before adding anything, remove or compress something. Every rule must answer: "what mistake does this prevent?"
+> **Maintaining this file:** Behavioral contract, not a knowledge dump. Hard ceiling: 200 lines (enforced by the pre-commit hook). No examples — models over-fit to them. No rationale or narrative — those belong in `docs/`. Stack-specific rules go in `docs/conventions.md`. Before adding anything, remove or compress something. Every rule must answer: "what mistake does this prevent?"
 
 ---
 
@@ -31,6 +31,7 @@ Apply to every task — these close the most common failure modes.
 - **Surface conflicts** — If two codebase patterns contradict, pick the more recent/tested one, explain why, and flag the other for cleanup. Average code that satisfies both is the worst code.
 - **Read before writing** — Before adding code, read immediate context: exports, callers, shared utilities in scope. "Looks orthogonal" is not safe. Ask if unsure why something is structured a certain way.
 - **Fail loud** — "Completed" is wrong if anything was skipped silently. Surface uncertainty; don't bury it.
+- **Never destroy without approval** — no recursive/forced deletes, force-push, hard reset, file overwrite outside the task, or data drop without explicit per-action user approval. Inspect the target first; if it contradicts how it was described, or you didn't create it, stop and surface it. A hook blocks the worst commands; this rule covers everything the hook can't see.
 
 ---
 
@@ -44,8 +45,12 @@ Apply to every task — these close the most common failure modes.
 
 ## Workflow
 
+- **Trivial fast path** — single file, no new abstraction, no behavior change: implement directly and state "No plan needed: <reason>". No plan file, no task row. When in doubt, it is not trivial.
 - **Plan first** — map all touch points before writing when a change touches more than ~3 files.
+- **Plans live in this repo** — plans go in `docs/plans/`, task specs in `docs/tasks/`. Plan filename: `<verb>-<subject>.md` tied to the task. Never a global path, never a generated slug.
+- **Register at plan approval** — the moment a plan is approved, add the `AGENT_TASKS.md` row and spec file with an assignee. Never self-assign and implement in one step: state the assignment, get the normal go-ahead, then start.
 - **ALWAYS run quality gates before committing:** type-check, lint, test (use your project's commands).
+- **Verify the baseline before building** — before implementing against an existing branch or task, run quality gates first. A red baseline is a finding to report, not a state to silently inherit.
 - **ALWAYS comment inline suppressions** — e.g. `@ts-ignore`, `# noqa`, `# type: ignore`; include the reason.
 - **ONE logical unit per commit** — prefix: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`; subject ≤ 72 chars.
 - **ALWAYS use only the user's git identity** — omit `Co-Authored-By` and AI signatures.
@@ -64,7 +69,8 @@ ALWAYS write a failing test before touching production code.
 1. Write the failing test first; if impossible, explain the alternative validation in the PR.
 2. Name the test to make the failure case obvious.
 3. Verify the test would fail if the business logic changed — a test that can't fail is wrong.
-4. Run the full suite after fixing.
+4. Test side effects, not execution — assert the value written, the call made, the event fired.
+5. Run the full suite after fixing.
 
 | Change type         | Required in PR body                                      |
 | ------------------- | -------------------------------------------------------- |
@@ -106,8 +112,8 @@ Apply automatically — these are prescriptive, not suggestions.
 ### Session start
 
 On your FIRST response of any session:
-1. Invoke `using-superpowers` via the Skill tool.
-2. The `UserPromptSubmit` hook has already injected HANDOFF.md and AGENT_TASKS.md. Acknowledge the current task and next steps.
+1. Invoke `using-superpowers` via the Skill tool (no Skill tool → see `docs/model-tiers.md` fallbacks).
+2. The `UserPromptSubmit` hook injects HANDOFF.md and AGENT_TASKS.md, gated to once per hour. If no `<session-start-brief>` block is in context, read `HANDOFF.md` and `docs/AGENT_TASKS.md` directly. Acknowledge the current task and next steps.
 3. Report `ready` or `in-progress` tasks from AGENT_TASKS.md.
 4. State your proposed next action and wait for confirmation.
 
@@ -140,6 +146,8 @@ For multi-step tasks: after each significant step, state what was done, what's v
 | Before shipping any user-facing feature | `impeccable:harden` (or equivalent hardening review) |
 | Auth, API keys, rate limiting, or API routes | `security-review` |
 
+No Skill tool in this harness? Every skill step above has a skill-less fallback prompt in `docs/model-tiers.md` — use it; never skip the step silently.
+
 ### Deployment
 
 _[Fill in after stack is chosen — e.g. "Hosted on Vercel — invoke `deploy-to-vercel`"]_
@@ -158,6 +166,7 @@ _[Fill in after stack is chosen — e.g. "Hosted on Vercel — invoke `deploy-to
 | **Researcher**   | Read-only exploration. Never modifies files.                 |
 
 - **ALWAYS use `isolation: "worktree"`** for every agent that modifies files.
+- **Respect model floors and the complexity ceiling** in `docs/model-tiers.md` when delegating — exact file list, do-not-touch list, concrete acceptance criteria, no open-ended exploration.
 - Approved plan with independent tasks → invoke `subagent-driven-development`.
 - Implementation complete + quality gates pass → invoke `finishing-a-development-branch`.
 - Agents PUSH to branch; human reviews, approves, and merges to main.
@@ -175,5 +184,7 @@ _[Fill in after stack is chosen — e.g. "Hosted on Vercel — invoke `deploy-to
 | `docs/environment.md`              | Setting up, debugging config, or adding/changing env vars                          |
 | `docs/multi-agent.md`              | Orchestrating parallel work, spinning up worktrees, or managing Codex token limits |
 | `docs/agent-roster.json`           | Resolving which model to use for a role, effort level, or task type                |
+| `docs/model-tiers.md`              | Delegating to a mid/small model, or running a skill step without the Skill tool    |
+| `docs/service-ceilings.md`         | Adding or changing calls to any external service (quotas, rate limits, scaling)    |
 | `docs/plans/planning-template.md`  | Writing a handoff spec for an Implementer or Codex task                            |
 | `docs/AGENT_TASKS.md`              | Checking live task status or picking up an in-progress spec                        |

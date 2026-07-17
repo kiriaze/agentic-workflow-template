@@ -19,11 +19,21 @@ Required evidence by change type — delete rows that don't apply:
 | Docs / config       | Describe what changed and why (no media required)                     |
 -->
 
+## UI evidence (required for any change a user can see — delete section otherwise)
+
+<!-- Embed the actual media here. Screenshots for static changes; a GIF (browser tooling /
+     gif_creator) or exact reproduction steps for interaction flows.
+     Codex-implemented UI tasks: CC captures these during review, before the PR opens. -->
+
+Before:
+
+After:
+
 ## Checklist
 
 - [ ] Type-check passes (e.g. `npx tsc --noEmit`)
 - [ ] Lint passes (e.g. `npm run lint`)
 - [ ] All tests pass (e.g. `npm test`)
 - [ ] Bug fix: failing test written before the fix
-- [ ] UI change: before + after screenshots included above
+- [ ] UI change: Before/After media is **embedded in the section above** — do not tick this box without it; a UI PR without media fails review
 - [ ] New env var: documented in `docs/environment.md`

@@ -58,7 +58,7 @@ flowchart TD
 ### 1. Ideation
 - Discuss freely with CC — no tooling needed.
 - For open-ended brainstorming, CC stays conversational until something concrete emerges.
-- For feature requests from users, log to [features page](/features) or the chosen feedback tool.
+- For feature requests from users, log to your chosen feedback tool. _[fill in if you adopt one]_
 
 ### 2. Design (UI/UX work)
 - CC invokes `impeccable:shape` (or an equivalent design brief) to produce a task-scoped brief before writing any code.
@@ -66,9 +66,10 @@ flowchart TD
 - Do not write UI code before a design brief is produced; output is generic without it.
 
 ### 3. Planning
+- **Trivial fast path first:** single file, no new abstraction, no behavior change → no plan, no spec, no task row. CC states "No plan needed: <reason>" and implements directly. When in doubt, it's not trivial.
 - For any change touching >3 files, CC maps all touch points and confirms with you before acting.
-- The canonical plan format is `docs/plans/planning-template.md`.
-- Once a plan is approved, CC writes the spec into `docs/AGENT_TASKS.md` and creates `docs/tasks/TASK-NNN.md`.
+- The canonical plan format is `docs/plans/planning-template.md`. Plans are written to **this repo's** `docs/plans/`, named `<verb>-<subject>.md` — never to a global path, never with a generated slug.
+- Once a plan is approved, CC **immediately** registers it: one row in `docs/AGENT_TASKS.md` + `docs/tasks/TASK-NNN.md`, with an assignee. Registration happens at approval time, before implementation — an agent may not self-assign and implement in one step.
 
 ### 4. Implementation
 
@@ -101,6 +102,8 @@ npm run lint && npx tsc --noEmit && npm test
 
 Make it executable: `chmod +x .scripts/quality-gates.sh`. AI will create this file during scaffold adaptation (TASK-000) or when you ask it to once your stack is known.
 
+Docs-only commits (every staged file is markdown or under `docs/`/`.github/`) skip the gates — they can't affect build or tests, and skipping them removes the friction that fuels over-ceremony. Anything touching code, configs, or dependencies runs the full gates.
+
 Skill invocations (as applicable):
 - CC runs `simplify`, `security-review`, and `impeccable:audit` where appropriate.
 - Codex output: CC reviews the diff against the spec before a PR is opened.
@@ -122,10 +125,12 @@ Skill invocations (as applicable):
 3. Name the added test(s) in the PR body.
 
 **UI screenshot workflow (CC):**
-1. `preview_start` → capture `preview_screenshot` of the *current* state (before).
-2. Make the change, reload, capture `preview_screenshot` of the *after* state.
+1. Start the app with the browser/preview tools → capture a screenshot of the *current* state (before).
+2. Make the change, reload, capture the *after* state.
 3. Paste both into the PR body with `Before:` / `After:` labels.
-4. For interaction flows (click, form, animation): describe reproduction steps or link a Loom.
+4. For interaction flows (click, form, animation): record a GIF with the browser tooling (e.g. `gif_creator`) or describe exact reproduction steps.
+
+**Enforcement:** the PR template's UI-evidence checkbox may only be ticked when the media is actually embedded above it — a UI PR without media fails review, full stop. CI cannot verify media; the reviewer checklist is the gate.
 
 **Codex note:** Codex has no browser access. CC performs all screenshot capture during the review phase for Codex-implemented UI tasks. This is a non-negotiable step before opening a PR for any Codex task that touches the UI.
 
@@ -142,12 +147,11 @@ Skill invocations (as applicable):
 | Trigger | CC action |
 |---|---|
 | Session start | Invoke `using-superpowers`, read HANDOFF.md, report AGENT_TASKS.md status |
+| Trivial change (single file, no behavior change) | State "No plan needed: <reason>", implement directly |
 | UI/design work | Check `PRODUCT.md` + `DESIGN.md`, invoke `impeccable:shape` before coding |
 | New feature >3 files | Map touch points, confirm plan |
-| `src/lib/providers/` touched | Invoke `claude-api` (preserves prompt caching) |
-| New Next.js page/route | Invoke `vercel-react-best-practices` |
-| New reusable component | Invoke `vercel-composition-patterns` |
-| Supabase work | Invoke `supabase` + `supabase-postgres-best-practices` |
+| AI-provider code touched | Invoke `claude-api` (preserves prompt caching) |
+| _[fill in stack-specific triggers — mirror AGENTS.md § Agent Skill Rules]_ | _[fill in]_ |
 | After non-trivial code change | Invoke `simplify` |
 | After significant UI component | Invoke `impeccable:audit` |
 | Auth/API route changes | Invoke `security-review` |
@@ -202,7 +206,9 @@ sequenceDiagram
 | `docs/conventions.md` | Human or AI | After stack is chosen or changes | Ask Claude: "update conventions.md for [stack]" |
 | `AGENTS.md` | Human | After setup.sh; when workflow changes | Review `[fill in]` placeholders; AI can suggest updates |
 | `PRODUCT.md` / `DESIGN.md` | Skill | Once per project; re-run if brand changes | `impeccable teach` (or equivalent design brief tool) |
-| `docs/agent-roster.json` | Human | When new model versions ship | Edit directly |
+| `docs/agent-roster.json` | Human | When new model versions ship; bump `last_verified` | Edit directly — session-start hook warns when >60 days stale |
+| `docs/model-tiers.md` | Human or AI | When roster models or skill availability change | Refresh floors, fallbacks, and validation matrix together |
+| `docs/service-ceilings.md` | Human or AI | When an external service is added or usage patterns shift | Ask Claude: "refresh service-ceilings.md from the codebase" |
 | `.scripts/quality-gates.sh` | Human or AI | Created once stack is chosen | Ask Claude: "create quality-gates.sh for [stack]" |
 | `docs/tasks/TASK-NNN.md` | CC (auto) | Created per approved plan; deleted on merge | N/A |
 | `docs/workflow.md` | Human | When workflow changes | Update manually; AI can propose edits |

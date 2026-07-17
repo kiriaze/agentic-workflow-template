@@ -125,7 +125,8 @@ detect_existing_scaffold_files() {
     AGENTS.md CLAUDE.md HANDOFF.md
     .scripts .claude .codex
     docs/architecture.md docs/conventions.md docs/environment.md
-    docs/multi-agent.md docs/planning-template.md docs/workflow.md docs/AGENT_TASKS.md
+    docs/multi-agent.md docs/model-tiers.md docs/service-ceilings.md
+    docs/plans/planning-template.md docs/workflow.md docs/AGENT_TASKS.md
   )
 
   for p in "${check[@]}"; do
@@ -306,6 +307,8 @@ architecture.md
 conventions.md
 environment.md
 multi-agent.md
+model-tiers.md
+service-ceilings.md
 workflow.md
 AGENT_TASKS.md
 agent-roster.json

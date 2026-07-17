@@ -1,58 +1,77 @@
 {
-  "version": "1",
+  "version": "2",
   "note": "Single source of truth for agent model assignments. Edit here only — never hardcode models elsewhere.",
-
+  "last_verified": "2026-07-16",
+  "freshness_check": "If today is more than 60 days past last_verified, ask the human to reconfirm these model IDs against current provider releases before spawning subagents, then update last_verified. The session-start hook warns when this is overdue.",
   "roles": {
     "orchestrator": {
-      "cc":    "claude-opus-4-7",
+      "cc": "claude-opus-4-8",
       "codex": "gpt-5.5",
       "description": "Plans, decomposes, delegates, reviews diffs. Never writes production code."
     },
     "implementer": {
-      "cc":    "claude-sonnet-4-6",
+      "cc": "claude-sonnet-4-6",
       "codex": "gpt-5.4-mini",
       "codex_note": "Run at Extra High intelligence in Codex settings.",
       "description": "Executes a focused spec. Runs in a worktree."
     },
     "reviewer": {
-      "cc":    "claude-sonnet-4-6",
+      "cc": "claude-sonnet-4-6",
       "codex": "gpt-5.4",
       "description": "Checks diff vs spec, runs quality gates."
     },
     "researcher": {
-      "cc":    "claude-haiku-4-5-20251001",
+      "cc": "claude-haiku-4-5-20251001",
       "codex": "gpt-5.4-mini",
       "description": "Read-only exploration. Never modifies files."
     }
   },
-
   "routing": {
+    "effort_note": "Only xhigh needs overrides — high is the role default. xhigh escalates one tier for the rare cases AGENTS.md defines (cross-cutting bugs, security-critical work).",
     "effort_overrides": {
       "implementer": {
-        "high":  { "codex": "gpt-5.4-mini" },
-        "xhigh": { "codex": "gpt-5.4-mini" }
+        "xhigh": {
+          "cc": "claude-opus-4-8",
+          "codex": "gpt-5.4"
+        }
       },
       "researcher": {
-        "high":  { "codex": "gpt-5.4-mini" },
-        "xhigh": { "codex": "gpt-5.4-mini" }
+        "xhigh": {
+          "cc": "claude-sonnet-4-6",
+          "codex": "gpt-5.4"
+        }
       }
     },
     "task_type_overrides": {
-      "architecture":    { "cc": "claude-opus-4-7",           "codex": "gpt-5.5"      },
-      "security_review": { "cc": "claude-sonnet-4-6",         "codex": "gpt-5.4"      },
-      "ui_visual":       { "cc": "claude-sonnet-4-6",         "codex": "gpt-5.4-mini" },
-      "docs_config":     { "cc": "claude-haiku-4-5-20251001", "codex": "gpt-5.4-mini" }
+      "architecture": {
+        "cc": "claude-opus-4-8",
+        "codex": "gpt-5.5"
+      },
+      "security_review": {
+        "cc": "claude-sonnet-4-6",
+        "codex": "gpt-5.4"
+      },
+      "ui_visual": {
+        "cc": "claude-sonnet-4-6",
+        "codex": "gpt-5.4-mini"
+      },
+      "docs_config": {
+        "cc": "claude-haiku-4-5-20251001",
+        "codex": "gpt-5.4-mini"
+      }
     }
   },
-
-  "priority": ["task_type_overrides", "effort_overrides", "roles"],
-
+  "priority": [
+    "task_type_overrides",
+    "effort_overrides",
+    "roles"
+  ],
   "task_type_labels": {
-    "architecture":    "New abstraction, cross-cutting design, ≥5 files, data model changes",
+    "architecture": "New abstraction, cross-cutting design, ≥5 files, data model changes",
     "security_review": "Auth, API key handling, RLS, rate limiting, storage access patterns",
-    "ui_visual":       "Component or layout work, no logic change",
-    "docs_config":     "Markdown, env vars, config files, manifest changes",
-    "implementation":  "Default — code changes with a clear spec",
-    "research":        "Read-only; exploration and summarization"
+    "ui_visual": "Component or layout work, no logic change",
+    "docs_config": "Markdown, env vars, config files, manifest changes",
+    "implementation": "Default — code changes with a clear spec",
+    "research": "Read-only; exploration and summarization"
   }
 }

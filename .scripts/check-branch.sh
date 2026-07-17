@@ -32,16 +32,17 @@ except Exception:
 BRANCH=$(git -C "$PROJECT_ROOT" branch --show-current 2>/dev/null || echo "")
 [[ "$BRANCH" != "main" && "$BRANCH" != "master" ]] && exit 0
 
+# Exit 2 + stderr is the blocking convention for CC PreToolUse hooks
+# (exit 1 is non-blocking and would let the write go through).
 while IFS= read -r FILE_PATH; do
   if [[ "$FILE_PATH" == *"/src/"* || "$FILE_PATH" == src/* ]]; then
-    echo ""
-    echo "BLOCKED: Cannot write to src/ directly on '$BRANCH'."
-    echo "Create a feature branch before modifying source files:"
-    echo "  git checkout -b feat/<task-name>"
-    echo ""
-    echo "File attempted: $FILE_PATH"
-    echo ""
-    exit 1
+    {
+      echo "BLOCKED: Cannot write to src/ directly on '$BRANCH'."
+      echo "Create a feature branch before modifying source files:"
+      echo "  git checkout -b feat/<task-name>"
+      echo "File attempted: $FILE_PATH"
+    } >&2
+    exit 2
   fi
 done <<< "$FILE_PATHS"
 

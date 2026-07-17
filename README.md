@@ -16,7 +16,8 @@ A universal scaffold for AI-agent-driven development. Sets up the full multi-age
 | `.github/` | PR template: Summary, Evidence table, quality gate checklist |
 | `.codex/` | Codex config: model assignment, approval mode, context includes, token budget; hooks mirroring `.claude/settings.json` |
 | `docs/` | Architecture, conventions, environment, multi-agent rules, planning templates, workflow guide, task specs |
-| `docs/agent-roster.json` | Single source of truth for model assignments by role, effort level, and task type |
+| `docs/agent-roster.json` | Single source of truth for model assignments by role, effort level, and task type (`last_verified` freshness-checked by the session-start hook) |
+| `docs/model-tiers.md` | Model floors per task type, skill-less fallback prompts for every skill step, task-decomposition rules + complexity ceiling for mid/small models |
 | `docs/plans/` | `planning-template.md` + filled-in `example-plan.md` for Orchestrator → Implementer handoffs |
 | `docs/tasks/` | One spec file per active task (`TASK-NNN.md`); deleted on merge — PR history is the record |
 | `.gitignore` | Sane defaults — created only if missing, never overwritten |
@@ -75,6 +76,8 @@ This template references several Claude Code skills. None are required — the s
 | `finishing-a-development-branch` | Final verification + PR options after implementation | Run quality gates manually; open PR with `gh pr create` |
 | `simplify` | Post-implementation code quality pass | Ask inline: "review this diff for unnecessary complexity" |
 
+The full skill-less fallback map — every skill step, for any harness without a Skill tool — lives in `docs/model-tiers.md`.
+
 Skills live in `~/.claude/skills/` and are shared across all your projects. To add one, copy the skill file there. If you keep skills in a separate directory (e.g. `~/.agents/skills/`), symlink it: `ln -sf ~/.agents/skills ~/.claude/skills`.
 
 ## Repo structure
@@ -93,9 +96,10 @@ HANDOFF.md                        ← Session continuity template
 .github/
   PULL_REQUEST_TEMPLATE.md        ← Evidence table + quality gate checklist
 .scripts/
-  session-start.sh              ← Injects HANDOFF.md + active tasks (shared by CC and Codex)
+  session-start.sh              ← Injects HANDOFF.md + active tasks + roster freshness (shared by CC and Codex)
   check-branch.sh               ← Blocks src/ writes on main (shared by CC and Codex)
   auto-lint.sh                  ← Auto-lint on .ts/.tsx edits (shared by CC and Codex)
+  guard-destructive.sh          ← Blocks rm -r / reset --hard / force-push pending user approval
 .codex/
   config.toml                     ← Codex model, approval mode, context includes, token limit
   hooks.json                      ← Codex hook wiring (calls .scripts/)
@@ -105,6 +109,8 @@ docs/
   conventions.md                  ← Coding and UI conventions (fill in per project)
   environment.md                  ← Environment variables (fill in per project)
   multi-agent.md                  ← Worktrees, model selection, handoff protocol, git workflow
+  model-tiers.md                  ← Model floors, skill-less fallbacks, decomposition rules, validation matrix
+  service-ceilings.md             ← External service quotas + scaling roadmap (fill in per project)
   agent-roster.json               ← Model assignments by role, effort, and task type
   AGENT_TASKS.md                  ← Live task registry with active/completed rows
   plans/
