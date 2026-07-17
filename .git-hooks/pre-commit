@@ -45,7 +45,24 @@ fi
 # Run project quality gates if defined. Create .scripts/quality-gates.sh with
 # your lint/typecheck/test commands once your stack is chosen — it will be
 # executed automatically on every commit. See docs/workflow.md for convention.
-if [ -f ".scripts/quality-gates.sh" ] && [ -x ".scripts/quality-gates.sh" ]; then
+#
+# Skipped only when the commit is provably inert: every staged file is markdown
+# or lives in docs/ or .github/. Anything that can affect build or tests
+# (package.json, lockfiles, configs, any code path) runs the full gates.
+DOCS_ONLY=1
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  case "$f" in
+    docs/*|.github/*|*.md) ;;
+    *) DOCS_ONLY=0 ;;
+  esac
+done <<EOF
+$(git diff --cached --name-only)
+EOF
+
+if [ "$DOCS_ONLY" -eq 1 ]; then
+  echo "Docs-only commit — skipping quality gates."
+elif [ -f ".scripts/quality-gates.sh" ] && [ -x ".scripts/quality-gates.sh" ]; then
   .scripts/quality-gates.sh
   if [ $? -ne 0 ]; then
     echo ""

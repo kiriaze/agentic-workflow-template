@@ -42,7 +42,19 @@ except Exception:
 PYEOF
 )
 
-RESULT=$(python3 -c "$PY" 2>/dev/null || true)
+if command -v python3 >/dev/null 2>&1; then
+  RESULT=$(python3 -c "$PY" 2>/dev/null || true)
+else
+  # Degraded mode: python3 unavailable. Match the raw payload without JSON parsing
+  # or quote-stripping — cruder (quoted mentions may false-positive), but a guard
+  # must not fail open just because its parser is missing.
+  INPUT=$(cat)
+  if printf '%s' "$INPUT" | grep -qE 'rm +(-[^ ]* +)*-[^ ]*r|git +reset +(-[^ ]+ +)*--hard|git +push[^|;&]*( --force(-with-lease)?| -f)|git +clean[^|;&]* -[^ ]*[fdx]|git +branch +(-[^ ]+ +)*-D'; then
+    RESULT="destructive pattern, degraded grep mode — install python3 for precise matching|$INPUT"
+  else
+    RESULT=""
+  fi
+fi
 
 [[ -z "$RESULT" ]] && exit 0
 

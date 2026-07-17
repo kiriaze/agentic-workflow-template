@@ -102,6 +102,8 @@ npm run lint && npx tsc --noEmit && npm test
 
 Make it executable: `chmod +x .scripts/quality-gates.sh`. AI will create this file during scaffold adaptation (TASK-000) or when you ask it to once your stack is known.
 
+Docs-only commits (every staged file is markdown or under `docs/`/`.github/`) skip the gates — they can't affect build or tests, and skipping them removes the friction that fuels over-ceremony. Anything touching code, configs, or dependencies runs the full gates.
+
 Skill invocations (as applicable):
 - CC runs `simplify`, `security-review`, and `impeccable:audit` where appropriate.
 - Codex output: CC reviews the diff against the spec before a PR is opened.
